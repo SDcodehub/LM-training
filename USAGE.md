@@ -17,12 +17,12 @@ wget https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinySto
 wget https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-valid.txt
 ```
 
+## Train BPE
 Run the BPE preprocessing sample with logging from the repository root.
 
 ### Default run (INFO level)
 ```bash
-cd assignment1-basics
-uv run python -u LM_training/train_bpe.py | cat
+uv run python -u LM_training/tokenizer/bpe/training.py
 ```
 
 ### Debug run (verbose top‑K details)
