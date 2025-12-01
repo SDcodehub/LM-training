@@ -1,4 +1,21 @@
-## Usage
+# LM Training repository
+Training and model architecture ablations
+
+## Env setup
+Run uv tests to setup the environment
+```
+uv run pytest
+```
+
+## data download
+
+``` sh
+mkdir -p data
+cd data
+
+wget https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-train.txt
+wget https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-valid.txt
+```
 
 Run the BPE preprocessing sample with logging from the repository root.
 
@@ -18,13 +35,7 @@ Notes:
 - INFO shows high‑level counts. Set `LOG_LEVEL=DEBUG` to include top‑K splits and pair stats.
 - Outputs go to stdout; no files are written during normal debugging.
 
-``` sh
-mkdir -p data
-cd data
 
-wget https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-train.txt
-wget https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-valid.txt
-```
 
 
 ### Tokenization script
