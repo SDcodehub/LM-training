@@ -1,34 +1,5 @@
 """
 Tokenize a text dataset with the BPE tokenizer and save token ids to a .npy file.
-
-Usage (10k TinyStories tokenizer on the VALID set):
-
-As a module (recommended):
-    LOG_LEVEL=INFO python -m LM_training.scripts.tokenize_dataset \
-      --input ./data/TinyStoriesV2-GPT4-valid.txt \
-      --vocab ./bpe_tokenizer/tinystories-10k_vocab.json \
-      --merges ./bpe_tokenizer/tinystories-10k_merges.txt \
-      --output ./data/TinyStoriesV2-GPT4-valid_ids_10k.npy
-
-With uv:
-    LOG_LEVEL=INFO uv run python -m LM_training.scripts.tokenize_dataset \
-      --input ./data/TinyStoriesV2-GPT4-valid.txt \
-      --vocab ./bpe_tokenizer/tinystories-10k_vocab.json \
-      --merges ./bpe_tokenizer/tinystories-10k_merges.txt \
-      --output ./data/TinyStoriesV2-GPT4-valid_ids_10k.npy
-
-Direct script invocation:
-    LOG_LEVEL=INFO python ./LM_training/scripts/tokenize_dataset.py \
-      --input ./data/TinyStoriesV2-GPT4-valid.txt \
-      --vocab ./bpe_tokenizer/tinystories-10k_vocab.json \
-      --merges ./bpe_tokenizer/tinystories-10k_merges.txt \
-      --output ./data/TinyStoriesV2-GPT4-valid_ids_10k.npy
-With uv:
-    LOG_LEVEL=INFO uv run python ./LM_training/scripts/tokenize_dataset.py \
-      --input ./data/TinyStoriesV2-GPT4-valid.txt \
-      --vocab ./bpe_tokenizer/tinystories-10k_vocab.json \
-      --merges ./bpe_tokenizer/tinystories-10k_merges.txt \
-      --output ./data/TinyStoriesV2-GPT4-valid_ids_10k.npy
 """
 
 import argparse
