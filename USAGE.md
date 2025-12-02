@@ -36,10 +36,8 @@ Notes:
 - Outputs go to stdout; no files are written during normal debugging.
 
 
-
-
-### Tokenization script
-- `LM_training/scripts/tokenize_dataset.py`: tokenizes a text file with the TinyStories BPE and writes a `.npy` of uint16 token ids. See the script header for usage examples (including `uv run`).
+## Tokenization script
+- `uv run python -u LM-training/LM_training/tokenizer/cli/tokenize_dataset.py` tokenizes a text file with the TinyStories BPE and writes a `.npy` of uint16 token ids. See the script header for usage examples (including `uv run`).
 
 ### Benchmark (timing)
 You can use [`hyperfine`](https://github.com/sharkdp/hyperfine) to benchmark the runtime of the BPE training script.
