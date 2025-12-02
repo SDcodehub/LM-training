@@ -50,6 +50,8 @@ def parse_args():
     parser.add_argument("--device", type=str, default="auto")
     parser.add_argument("--wandb", action="store_true", help="Log to Weights & Biases")
     parser.add_argument("--wandb_project", type=str, default="LM_training")
+    parser.add_argument("--run_name", type=str, default=None, help="W&B run name")
+    parser.add_argument("--run_tags", type=str, nargs="*", default=None, help="W&B run tags (space-separated)")
     parser.add_argument("--resume", type=str, default=None, help="Path to checkpoint to resume from")
 
     return parser.parse_args()
@@ -94,7 +96,6 @@ def estimate_loss(model, data, batch_size, context_length, device, eval_iters):
     Estimates the loss on the dataset by averaging over a few random batches.
     Helps reduce noise in the validation metric.
     """
-    out = {}
     model.eval()
     losses = torch.zeros(eval_iters)
     for k in range(eval_iters):
@@ -117,10 +118,14 @@ def main():
 
     # 2. Setup W&B (The visual tracker)
     if args.wandb:
+        # Optional mode override (e.g., offline/disabled)
+
+        run_name = args.run_name or f"run_{int(time.time())}"
         wandb.init(
-            project=args.wandb_project, 
-            name=f"run_{int(time.time())}", # Unique name
-            config=vars(args) # Save all hyperparameters 
+            project=args.wandb_project,
+            name=run_name, # Prefer user-provided name, else timestamp
+            tags=args.run_tags,
+            config=vars(args) # Save all hyperparameters
         )
     
     logger.info(f"Starting training with config: {vars(args)}")
