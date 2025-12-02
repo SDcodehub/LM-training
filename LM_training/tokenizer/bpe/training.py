@@ -4,16 +4,21 @@ Train a BPE model on a text file
 import os
 import logging
 import json
+import time
 from binascii import b2a_hex
 from heapq import nlargest
 import regex as re
+from tqdm import tqdm
 from LM_training.utils.logging_config import get_logger
 
 log = get_logger()
 # GPT 2 tokenizer pattern
 # This regex splits the text into chunks of letters numbers or punctuations
 # Its designed to keep the spaces attached to the words that follow them
-split_pattern = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
+# Compile pattern once for performance
+SPLIT_PATTERN = re.compile(
+    r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
+)
 
 
 def pretokenise_text(input_path, special_tokens=None):
@@ -21,6 +26,7 @@ def pretokenise_text(input_path, special_tokens=None):
     if special_tokens is None:
         special_tokens = []
 
+    log.info(f"Reading {input_path}...")
     with open(input_path, "r", encoding="utf-8") as read_file:
         text = read_file.read()
    
@@ -36,14 +42,16 @@ def pretokenise_text(input_path, special_tokens=None):
 
     # pre tokenize the text chunks seperately
     word_counts = {}
-    for chunk in text_chunks:
+
+    log.info("Pre-tokenizing text...")
+    for chunk in tqdm(text_chunks, desc="Chunking"):
         # Ignore the special tokens
         # handles in the vocab seperately
         if chunk in special_tokens:
             continue
 
         # find all pre-tokens in the chunk
-        for word in re.findall(split_pattern, chunk):
+        for word in SPLIT_PATTERN.findall(chunk):
             word_counts[word] = word_counts.get(word, 0) + 1
 
     # BPE generally works on the byte sequences to converting the strings into byte sequences
@@ -78,12 +86,23 @@ def get_stats(splits):
 
 def merge_splits(splits, pair, new_token):
     """Replaces all the occuraces of pair in the splits with new_token"""
+    p0, p1 = pair
     new_splits = {}
     for words_parts, count in splits.items():
+        # Optimization: If the pair isn't in this word, skip the heavy logic
+        # Note: This is a heuristic check; p0 might exist without p1 following it.
+        # But it saves time for words that contain neither byte.
+        if p0 not in words_parts:
+             new_splits[words_parts] = count
+             continue
+
         new_words_parts = []
         i = 0
-        while i < len(words_parts):
-            if words_parts[i:i+2] == pair:
+        n = len(words_parts)
+
+        while i < n:
+            # Optimized Check: Direct index access is faster than slicing [i:i+2]
+            if i < n - 1 and words_parts[i] == p0 and words_parts[i+1] == p1:
                 new_words_parts.append(new_token)
                 i += 2
             else:
@@ -120,24 +139,26 @@ def save_tokenizer(vocab, merges, prefix):
 def train_bpe(input_path, vocab_size, special_tokens, save_prefix=None):
     """Main function for training BPE model"""
 
+    start_time = time.time()
     vocab_map = initialise_vocab(special_tokens)
     log.info("vocab size: %d", len(vocab_map))
 
     raw_splits = pretokenise_text(input_path, special_tokens)
     log.info("unique pretokenized byte-sequences: %d", len(raw_splits))
+
+    # Convert raw bytes keys to tuple of bytes for mutability simulation
     splits = {tuple(bytes([b]) for b in word): count for word, count in raw_splits.items()}
 
-    # Debug-only: top-K splits
-    if log.isEnabledFor(logging.DEBUG):
-        top_splits = nlargest(10, splits.items(), key=lambda kv: kv[1])
-        for byte_seq, count in top_splits:
-            hex_bytes = " ".join(f"{x[0]:02x}" for x in byte_seq)
-            log.debug("split %r [%s] -> %d", byte_seq, hex_bytes, count)
 
     merges = []
     num_merges = vocab_size - len(vocab_map)
+
+    log.info(f"Starting BPE training. Target merges: {num_merges}")
+
+    # WRAPPER: tqdm for progress bar
+    progress_bar = tqdm(range(num_merges), desc="Training BPE")
     
-    for i in range(num_merges):
+    for i in progress_bar:
         # Get the stats of the splits
         pair_stats = get_stats(splits)
 
@@ -167,9 +188,17 @@ def train_bpe(input_path, vocab_size, special_tokens, save_prefix=None):
         merges.append(best_pair)
         splits = merge_splits(splits, best_pair, new_token_bytes)
 
-        log.info(f"Merge {i+1}/{num_merges}: {best_pair} -> {new_token_bytes}")
+        # Update tqdm description with current stats rarely (to save rendering time)
+        if i % 10 == 0:
+            progress_bar.set_postfix({"Best Pair": f"{p1}+{p2}", "Count": pair_stats[best_pair]})
+        
+        # LOGGING STRATEGY: Only log to console every X steps
+        if i % 100 == 0:
+             if log.isEnabledFor(logging.DEBUG):
+                 log.debug(f"Merge {i+1}: {best_pair} -> {new_token_bytes}")
 
-    log.info(f"Finished training. Final vocab size: {len(vocab_map)}")
+    total_time = time.time() - start_time
+    log.info(f"Finished training in {total_time:.2f}s. Final vocab size: {len(vocab_map)}")
 
     if save_prefix:
         save_tokenizer(vocab_map, merges, save_prefix)
@@ -177,19 +206,70 @@ def train_bpe(input_path, vocab_size, special_tokens, save_prefix=None):
     return vocab_map, merges
 
 if __name__ == "__main__":
-    # TODO remove this hard coding and make it a command line argument
-    output_dir = "bpe_tokenizer"
-    os.makedirs(output_dir, exist_ok=True)
-    # sample_text = "Hello, world! It's a test — with numbers 123 and spaces.  New line?\nYes!"
-    # temp_path = "/tmp/pretokenise_sample.txt"
-    # with open(temp_path, "w", encoding="utf-8") as f:
-    #     f.write(sample_text)
-    input_path = "./data/TinyStoriesV2-GPT4-train.txt"
-    vocab_size = 5000
-    special_tokens = ["<|endoftext|>"]
+    import argparse
+    import sys
+
+    parser = argparse.ArgumentParser(
+        description="Train a Byte-Pair Encoding (BPE) tokenizer on a text file."
+    )
+
+    # 1. Input File (Positional Argument - Required)
+    parser.add_argument(
+        "input_path", 
+        type=str, 
+        help="Path to the training text file (e.g., data/corpus.txt)"
+    )
+
+    # 2. Output Directory (Optional)
+    parser.add_argument(
+        "--output_dir", "-o", 
+        type=str, 
+        default="bpe_tokenizer",
+        help="Directory to save the vocab and merges files (default: bpe_tokenizer)"
+    )
+
+    # 3. Vocab Size (Optional)
+    parser.add_argument(
+        "--vocab_size", "-v", 
+        type=int, 
+        default=5000,
+        help="Target vocabulary size (default: 5000)"
+    )
+
+    # 4. Filename Prefix (Optional)
+    parser.add_argument(
+        "--prefix", "-p", 
+        type=str, 
+        default="tokenizer",
+        help="Prefix for the saved files (default: tokenizer)"
+    )
+
+    # 5. Special Tokens (Optional - List)
+    parser.add_argument(
+        "--special_tokens", "-s", 
+        nargs="*", 
+        default=["<|endoftext|>"],
+        help="List of special tokens to include (default: <|endoftext|>)"
+    )
+
+    args = parser.parse_args()
+
+    # Validation: Check if input file exists
+    if not os.path.exists(args.input_path):
+        log.error(f"Input file not found: {args.input_path}")
+        sys.exit(1)
+
+    # Prepare output directory
+    os.makedirs(args.output_dir, exist_ok=True)
+    full_save_prefix = os.path.join(args.output_dir, args.prefix)
+
+    log.info(f"Training BPE with vocab_size={args.vocab_size} on {args.input_path}")
+    log.info(f"Special tokens: {args.special_tokens}")
+
+    # Run Training
     train_bpe(
-        input_path, 
-        vocab_size, 
-        special_tokens, 
-        save_prefix=os.path.join(output_dir, "tinystories-5k")
+        args.input_path, 
+        args.vocab_size, 
+        args.special_tokens, 
+        save_prefix=full_save_prefix
     )

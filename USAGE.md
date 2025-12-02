@@ -17,20 +17,24 @@ wget https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinySto
 wget https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-valid.txt
 ```
 
+for open web
+```bash
+wget https://huggingface.co/datasets/stanford-cs336/owt-sample/resolve/main/owt_train.txt.gz
+gunzip owt_train.txt.gz
+wget https://huggingface.co/datasets/stanford-cs336/owt-sample/resolve/main/owt_valid.txt.gz
+gunzip owt_valid.txt.gz
+```
+
 ## Train BPE
 Run the BPE preprocessing sample with logging from the repository root.
 MOdify the path of the dataset and name of the output file, number of merging in the training.py
 
 ### Default run (INFO level)
 ```bash
+cd LM-training
 uv run python -u LM_training/tokenizer/bpe/training.py
 ```
-
-### Debug run (verbose top‑K details)
-```bash
-cd assignment1-basics
-LOG_LEVEL=DEBUG uv run python -u LM_training/train_bpe.py | cat
-```
+use `LOG_LEVEL=DEBUG ` for debugging logs
 
 Notes:
 - INFO shows high‑level counts. Set `LOG_LEVEL=DEBUG` to include top‑K splits and pair stats.
@@ -73,14 +77,16 @@ uv run wandb login
 uv run python ./LM_training/scripts/train.py \
     --train_data ./output/file/npy/TinyStoriesV2-GPT4-train-10k.npy \
     --val_data ./output/file/npy/TinyStoriesV2-GPT4-valid-10k.npy \
-    --wandb \  
+    --wandb \
+    --run_name tinystory-steps15k \
+    --run_tags step15k \
     --out_dir runs/tinystories_run \
     --device cuda \
     --batch_size 64 \
-    --max_iters 5000 \
+    --max_iters 15000 \
     --lr 5e-4
 ```
-
+run_tags - can be space seperated tags
 
 <!-- Deprecated/To review: Section below may not belong here. -->
 <details>
