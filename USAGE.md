@@ -63,6 +63,23 @@ Do the same for the validation.
 
 I think we should use the same tokenizer as both as naturally part of the same data sets. think?
 
+## Start training
+
+```bash
+uv run wandb login
+```
+
+```bash
+uv run python ./LM_training/scripts/train.py \
+    --train_data ./output/file/npy/TinyStoriesV2-GPT4-train-10k.npy \
+    --val_data ./output/file/npy/TinyStoriesV2-GPT4-valid-10k.npy \
+    --wandb \  
+    --out_dir runs/tinystories_run \
+    --device cuda \
+    --batch_size 64 \
+    --max_iters 5000 \
+    --lr 5e-4
+```
 
 
 <!-- Deprecated/To review: Section below may not belong here. -->
