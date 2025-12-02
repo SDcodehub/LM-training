@@ -35,6 +35,7 @@ cd LM-training
 uv run python -u LM_training/tokenizer/bpe/training.py ./data/owt_train.txt \
   --output_dir bpe_tokenizer \
   --vocab_size 32000 \
+  --prefix owt_train_32k \
   --special_tokens "<|endoftext|>"
 ```
 use `LOG_LEVEL=DEBUG ` for debugging logs
