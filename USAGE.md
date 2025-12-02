@@ -32,7 +32,10 @@ MOdify the path of the dataset and name of the output file, number of merging in
 ### Default run (INFO level)
 ```bash
 cd LM-training
-uv run python -u LM_training/tokenizer/bpe/training.py
+uv run python -u LM_training/tokenizer/bpe/training.py ./data/owt_train.txt \
+  --output_dir bpe_tokenizer \
+  --vocab_size 32000 \
+  --special_tokens "<|endoftext|>"
 ```
 use `LOG_LEVEL=DEBUG ` for debugging logs
 
