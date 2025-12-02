@@ -41,8 +41,29 @@ Notes:
 tokenizes a text file with the TinyStories BPE and writes a `.npy` of uint16 token ids. See the script header for usage examples (including `uv run`).
 
 ```bash
-uv run python -u LM_training/tokenizer/cli/tokenize_dataset.py
+LOG_LEVEL=INFO
+
+uv run python -m LM_training.scripts.tokenize_dataset \
+      --input ./input/data/****.txt \
+      --vocab ./corresponding/vocab/json/***.json \
+      --merges ./corresponding/merges/txt/***.txt \
+      --output ./output/file/npy/***.npy
 ```
+
+example command
+```bash
+uv run python -m LM_training.tokenizer.cli.tokenize_dataset \
+      --input ./data/TinyStoriesV2-GPT4-train.txt \
+      --vocab ./bpe_tokenizer/TinyStoriesV2-GPT4-train.txt-10k_vocab.json \
+      --merges ./bpe_tokenizer/TinyStoriesV2-GPT4-train.txt-10k_merges.txt \
+      --output ./output/file/npy/TinyStoriesV2-GPT4-train-10k.npy
+```
+
+Do the same for the validation.
+
+I think we should use the same tokenizer as both as naturally part of the same data sets. think?
+
+
 
 <!-- Deprecated/To review: Section below may not belong here. -->
 <details>
