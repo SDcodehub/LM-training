@@ -19,6 +19,7 @@ wget https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinySto
 
 ## Train BPE
 Run the BPE preprocessing sample with logging from the repository root.
+MOdify the path of the dataset and name of the output file, number of merging in the training.py
 
 ### Default run (INFO level)
 ```bash
