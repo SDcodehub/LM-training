@@ -177,6 +177,7 @@ def train_bpe(input_path, vocab_size, special_tokens, save_prefix=None):
     return vocab_map, merges
 
 if __name__ == "__main__":
+    # TODO remove this hard coding and make it a command line argument
     output_dir = "bpe_tokenizer"
     os.makedirs(output_dir, exist_ok=True)
     # sample_text = "Hello, world! It's a test — with numbers 123 and spaces.  New line?\nYes!"
