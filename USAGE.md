@@ -91,6 +91,8 @@ uv run python ./LM_training/scripts/train.py \
     --lr 5e-4
 ```
 run_tags - can be space seperated tags
+Use Tags, will help to filter, prefer BS, Steps, HW
+BS256 step15k H10080GBHBM3
 
 <!-- Deprecated/To review: Section below may not belong here. -->
 <details>
