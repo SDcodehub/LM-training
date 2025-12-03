@@ -167,3 +167,8 @@ runs/
 bpe_tokenizer/
 
 .DS_Store
+
+output/
+
+wandb/
+data/
