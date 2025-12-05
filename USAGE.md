@@ -90,7 +90,10 @@ uv run python ./LM_training/scripts/train.py \
     --max_iters 15000 \
     --lr 5e-4
 ```
-run_tags - can be space seperated tags
+- run_tags - can be space seperated tags
+- Use Tags, will help to filter, prefer BS, Steps, HW
+  - `BS256 step15k H10080GBHBM3`
+- Change the output dir for the each run, .pt checkpints are stored in this folder, easier to keep the workspace clean
 
 <!-- Deprecated/To review: Section below may not belong here. -->
 <details>

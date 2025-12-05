@@ -12,7 +12,7 @@ from LM_training.nn.modules import TransformerLM
 from LM_training.nn.optim import AdamW, get_lr_cosine_schedule, gradient_clipping
 from LM_training.data_load import get_batch
 from LM_training.utils import save_checkpoint, load_checkpoint
-from LM_training.utils.logging_config import get_logger
+from LM_training.utils.logging_config import get_logger, attach_file_handler
 
 
 def parse_args():
@@ -116,6 +116,13 @@ def main():
     device = _resolve_device(args.device)
     logger.info(f"Using device: {device}")
 
+    os.makedirs(args.out_dir, exist_ok=True)
+
+   # Attach the log file
+    log_file_path = os.path.join(args.out_dir, "train.log")
+    attach_file_handler(logger, log_file_path)
+    logger.info(f"Saving logs to: {log_file_path}") 
+
     # 2. Setup W&B (The visual tracker)
     if args.wandb:
         # Optional mode override (e.g., offline/disabled)
@@ -127,6 +134,8 @@ def main():
             tags=args.run_tags,
             config=vars(args) # Save all hyperparameters
         )
+
+        # We will log the log file explicitly as an artifact at the end of training.
     
     logger.info(f"Starting training with config: {vars(args)}")
     
@@ -237,6 +246,11 @@ def main():
     # Save final checkpoint
     save_checkpoint(model, optimizer, iter_num, os.path.join(args.out_dir, "ckpt_final.pt"))
     logger.info("Training complete!")
+    if args.wandb:
+        artifact = wandb.Artifact("training-logs", type="logs")
+        artifact.add_file(log_file_path)
+        wandb.log_artifact(artifact)
+        wandb.finish()
 
 
 if __name__ == "__main__":
