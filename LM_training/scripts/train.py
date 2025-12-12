@@ -53,6 +53,7 @@ def parse_args():
     parser.add_argument("--run_name", type=str, default=None, help="W&B run name")
     parser.add_argument("--run_tags", type=str, nargs="*", default=None, help="W&B run tags (space-separated)")
     parser.add_argument("--resume", type=str, default=None, help="Path to checkpoint to resume from")
+    parser.add_argument("--group", type=str, default=None, help="W&B group name for run organization")
 
     return parser.parse_args()
 
@@ -132,7 +133,8 @@ def main():
             project=args.wandb_project,
             name=run_name, # Prefer user-provided name, else timestamp
             tags=args.run_tags,
-            config=vars(args) # Save all hyperparameters
+            config=vars(args), # Save all hyperparameters
+            group=args.group
         )
 
         # We will log the log file explicitly as an artifact at the end of training.
