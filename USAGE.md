@@ -28,6 +28,7 @@ gunzip owt_valid.txt.gz
 ## Train BPE
 Run the BPE preprocessing sample with logging from the repository root.
 MOdify the path of the dataset and name of the output file, number of merging in the training.py
+** vocab optimisation may procduce different results due to Tie braker conditions
 
 ### Default run (INFO level)
 ```bash
@@ -38,6 +39,8 @@ uv run python -u LM_training/tokenizer/bpe/training.py ./data/owt_train.txt \
   --prefix owt_train_32k \
   --special_tokens "<|endoftext|>"
 ```
+
+
 use `LOG_LEVEL=DEBUG ` for debugging logs
 
 Notes:
@@ -189,3 +192,24 @@ uv run python LM_training/compute_bytes_per_token.py \
 - TinyStories 32K: 4.072 bytes/token (10 sampled docs, seed 42)
 </div>
 </details>
+
+## Vocab Compare
+
+Compare two BPE vocabularies to check if they are identical, set-equivalent, or have diverged.
+
+```bash
+uv run python ./LM_training/utils/vocab_compare.py
+```
+
+Sample output:
+```
+Loading bpe_tokenizer/TinyStoriesV2-GPT4-train-v1_vocab.json...
+Loading bpe_tokenizer/TinyStoriesV2-GPT4-train-v2_vocab.json...
+
+⚠️ Strict equality failed (31455 ID mismatches). Checking Set Equality...
+
+❌ FAILURE: Vocabularies have diverged.
+Tokens in v1 but not v2: 733
+Tokens in v2 but not v1: 733
+Reason: Tie-breaking logic likely differed between implementations.
+```
