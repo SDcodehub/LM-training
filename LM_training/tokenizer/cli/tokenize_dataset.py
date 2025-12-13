@@ -8,6 +8,13 @@ import sys
 from typing import Any, Iterable, List
 
 try:
+    from tqdm import tqdm
+except ImportError:
+    # Fallback: a pass-through generator if tqdm is not installed
+    def tqdm(iterable, *args, **kwargs):
+        return iterable
+
+try:
     import numpy as np  # type: ignore
 except Exception:  # pragma: no cover - fallback for lint environments without numpy
     np = None  # type: ignore[assignment]
@@ -128,8 +135,13 @@ def main() -> None:
     tokenizer = load_tokenizer(args.vocab, args.merges)
 
     LOGGER.info("Opening input and starting tokenization: %s", args.input)
+
+    # We do NOT calculate 'total' (total lines) to avoid a slow pre-read of the file.
     with open(args.input, "r", encoding="utf-8") as file_handle:
-        all_token_ids = tokenize_lines(file_handle, tokenizer)
+        # mininterval ensures we don't update the screen too often (reduces IO overhead)
+        progress_bar = tqdm(file_handle, desc="Tokenizing", unit=" lines", mininterval=1.0)
+        all_token_ids = tokenize_lines(progress_bar, tokenizer)
+        
 
     LOGGER.info("Finished tokenizing. Total tokens: %d", len(all_token_ids))
     LOGGER.info("Converting tokens to uint16 array")
