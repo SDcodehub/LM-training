@@ -1,5 +1,5 @@
 import importlib.metadata
-from .generation import generate
+from .inference import generate
 
 __all__ = [
     "generate",

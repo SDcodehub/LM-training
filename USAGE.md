@@ -193,6 +193,33 @@ uv run python LM_training/compute_bytes_per_token.py \
 </div>
 </details>
 
+## Text Generation
+
+Generate text from a trained checkpoint using nucleus (top-p) sampling:
+
+```bash
+uv run python -m LM_training.inference.generate_text \
+    --checkpoint runs/owt_32k_H200_ctx1024_BS128/ckpt_10400.pt \
+    --vocab ./bpe_tokenizer/owt_train_v2_32k_vocab.json \
+    --merges ./bpe_tokenizer/owt_train_v2_32k_merges.txt \
+    --prompt "Once upon a time" \
+    --max_tokens 100 \
+    --temperature 0.8 \
+    --top_p 0.9
+```
+
+**Options:**
+- `--checkpoint` — Path to model checkpoint (.pt file)
+- `--vocab` — Path to vocabulary JSON file
+- `--merges` — Path to merges TXT file  
+- `--prompt` — Text prompt to start generation (default: "Once upon a time")
+- `--max_tokens` — Maximum new tokens to generate (default: 100)
+- `--temperature` — Sampling temperature; higher = more random (default: 0.8)
+- `--top_p` — Nucleus sampling threshold (default: 0.9)
+
+**Model architecture flags** (must match training config):
+- `--vocab_size`, `--context_length`, `--d_model`, `--num_layers`, `--num_heads`, `--d_ff`
+
 ## Vocab Compare
 
 Compare two BPE vocabularies to check if they are identical, set-equivalent, or have diverged.
