@@ -211,6 +211,7 @@ def main():
         # 3. Forward Pass
         logits = model(X)
         loss = F.cross_entropy(logits, Y)
+        perplexity = torch.exp(loss).item()
 
         # 4. Backward Pass
         optimizer.zero_grad()
@@ -237,6 +238,7 @@ def main():
             if args.wandb:
                 wandb.log({
                     "train/loss": loss_f,
+                    "train/perplexity": perplexity,
                     "train/lr": lr,
                     "train/step": iter_num,
                     "train/time_seconds": dt, # Wallclock time
