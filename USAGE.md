@@ -74,6 +74,48 @@ Do the same for the validation.
 
 I think we should use the same tokenizer as both as naturally part of the same data sets. think?
 
+## Count tokens in dataset
+
+After tokenizing your dataset, you can analyze the `.npy` file to understand:
+- Total number of tokens
+- Training steps per epoch
+- Number of epochs for a given `max_iters`
+
+This helps with training planning and understanding dataset coverage.
+
+### Basic usage (count tokens only)
+```bash
+uv run python -m LM_training.tokenizer.cli.count_tokens \
+    --data ./output/file/npy/TinyStoriesV2-GPT4-train-10k.npy
+```
+
+### With training configuration (calculate epochs)
+```bash
+uv run python -m LM_training.tokenizer.cli.count_tokens \
+    --data ./output/file/npy/TinyStoriesV2-GPT4-train-10k.npy \
+    --batch_size 64 \
+    --context_length 256 \
+    --max_iters 15000
+```
+
+**Example output:**
+```
+Dataset: TinyStoriesV2-GPT4-train-10k.npy
+Total tokens: 45,123,456
+
+Training Configuration:
+  Batch size: 64
+  Context length: 256
+  Tokens per batch: 16,384
+  Max possible steps (1 epoch): 2,753
+
+Training Plan (for 15,000 iterations):
+  Total tokens seen: 245,760,000
+  Approximate epochs: 5.4467
+```
+
+This tells you that 15,000 training steps will see the data approximately 5.4 times.
+
 ## Start training
 
 ```bash
